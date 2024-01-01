@@ -77,10 +77,11 @@ void ui_new_frame(float dt) {
         if (widget->flags & WIDGET_FLAG_NOT_CLICKABLE) {
             continue;
         }
-        if (widget->rect.min.X <= mouse_screen_position.X &&
-            widget->rect.min.Y <= mouse_screen_position.Y &&
-            widget->rect.max.X >= mouse_screen_position.X &&
-            widget->rect.max.Y >= mouse_screen_position.Y) {
+        Rect hit_rect = widget->hit_rect;
+        if (hit_rect.min.X <= mouse_screen_position.X &&
+            hit_rect.min.Y <= mouse_screen_position.Y &&
+            hit_rect.max.X >= mouse_screen_position.X &&
+            hit_rect.max.Y >= mouse_screen_position.Y) {
             ui_hot_widget = widget->id;
             if (widget->flags & WIDGET_FLAG_DRAGGABLE) {
                 ui_hot_draggable_widget = widget->id;
@@ -161,6 +162,7 @@ Widget *update_widget(Rect rect, String id, Widget_Flags flags = 0) {
     assert(widget != nullptr);
     widget->flags = flags;
     widget->rect = rect;
+    widget->hit_rect = draw_clip_rect_to_current_scissor(widget->rect);
     widget->id = real_id;
     widget->serial = ui_get_next_serial();
     widget->render_layer = current_draw_layer;

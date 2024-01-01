@@ -13,6 +13,9 @@ static int64_t   vertex_buffer_capacity;
 static List<int64_t> pushed_layers;
 int64_t              current_draw_layer;
 
+static List<HMM_Vec4> pushed_colors;
+HMM_Vec4              current_color_multiplier;
+
 static List<Rect> pushed_scissors;
 Rect              current_scissor_rect;
 
@@ -36,10 +39,12 @@ void draw_init() {
     vertices.allocator = default_allocator();
     pushed_layers.allocator = default_allocator();
     pushed_scissors.allocator = default_allocator();
+    pushed_colors.allocator = default_allocator();
 }
 
 void draw_update() {
     current_scissor_rect = full_screen_rect();
+    current_color_multiplier = v4(1, 1, 1, 1);
 }
 
 int64_t draw_get_next_serial() {
@@ -61,8 +66,30 @@ void draw_pop_layer() {
     current_draw_layer = pushed_layers.pop();
 }
 
+void draw_push_color_multiplier(HMM_Vec4 color) {
+    pushed_colors.add(current_color_multiplier);
+    current_color_multiplier = color;
+}
+
+void draw_pop_color_multiplier() {
+    current_color_multiplier = pushed_colors.pop();
+}
+
+Rect draw_clip_rect_to_current_scissor(Rect rect) {
+    rect.min.X = FMAX(rect.min.X, current_scissor_rect.min.X);
+    rect.min.X = FMIN(rect.min.X, current_scissor_rect.max.X);
+    rect.min.Y = FMAX(rect.min.Y, current_scissor_rect.min.Y);
+    rect.min.Y = FMIN(rect.min.Y, current_scissor_rect.max.Y);
+    rect.max.X = FMIN(rect.max.X, current_scissor_rect.max.X);
+    rect.max.X = FMAX(rect.max.X, current_scissor_rect.min.X);
+    rect.max.Y = FMIN(rect.max.Y, current_scissor_rect.max.Y);
+    rect.max.Y = FMAX(rect.max.Y, current_scissor_rect.min.Y);
+    return rect;
+}
+
 void draw_push_scissor(Rect rect) {
     pushed_scissors.add(current_scissor_rect);
+    rect = draw_clip_rect_to_current_scissor(rect);
     Draw_Command *cmd = commands.add_count(1);
     cmd->layer = current_draw_layer;
     cmd->serial = draw_get_next_serial();
@@ -89,7 +116,7 @@ Draw_Command *draw_quad(HMM_Vec2 min, HMM_Vec2 max, HMM_Vec4 color) {
     cmd->layer = current_draw_layer;
     cmd->min = min;
     cmd->max = max;
-    cmd->color = color;
+    cmd->color = color * current_color_multiplier;
     cmd->serial = draw_get_next_serial();
     return cmd;
 }

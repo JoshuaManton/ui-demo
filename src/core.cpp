@@ -249,25 +249,25 @@ Rect Rect::cut_top(float pixels) {
 
 Rect Rect::cut_right(float pixels) {
     Rect result = *this;
-    result.max.X = FMAX(result.min.X, result.min.X - pixels * ui_scale_factor);
-    this->min.X -= pixels * ui_scale_factor;
-    this->max.X = FMAX(this->min.X, this->max.X);
+    result.min.X = FMIN(result.max.X, result.max.X - pixels * ui_scale_factor);
+    this->max.X -= pixels * ui_scale_factor;
+    this->min.X = FMIN(this->max.X, this->min.X);
     return result;
 }
 
 Rect Rect::cut_bottom(float pixels) {
     Rect result = *this;
-    result.max.Y = FMAX(result.min.Y, result.min.Y - pixels * ui_scale_factor);
-    this->min.Y -= pixels * ui_scale_factor;
+    result.max.Y = FMAX(result.min.Y, result.min.Y + pixels * ui_scale_factor);
+    this->min.Y += pixels * ui_scale_factor;
     this->max.Y = FMAX(this->min.Y, this->max.Y);
     return result;
 }
 
 Rect Rect::cut_left(float pixels) {
     Rect result = *this;
-    result.min.X = FMIN(result.max.X, result.max.X - pixels * ui_scale_factor);
-    this->max.X -= pixels * ui_scale_factor;
-    this->min.X = FMIN(this->max.X, this->min.X);
+    result.max.X = FMAX(result.min.X, result.min.X + pixels * ui_scale_factor);
+    this->min.X += pixels * ui_scale_factor;
+    this->max.X = FMAX(this->min.X, this->max.X);
     return result;
 }
 
@@ -410,25 +410,25 @@ Rect Rect::cut_top_unscaled(float pixels) {
 
 Rect Rect::cut_right_unscaled(float pixels) {
     Rect result = *this;
-    result.max.X = FMAX(result.min.X, result.min.X - pixels);
-    this->min.X -= pixels;
-    this->max.X = FMAX(this->min.X, this->max.X);
+    result.min.X = FMIN(result.max.X, result.max.X - pixels);
+    this->max.X -= pixels;
+    this->min.X = FMIN(this->max.X, this->min.X);
     return result;
 }
 
 Rect Rect::cut_bottom_unscaled(float pixels) {
     Rect result = *this;
-    result.max.Y = FMAX(result.min.Y, result.min.Y - pixels);
-    this->min.Y -= pixels;
+    result.max.Y = FMAX(result.min.Y, result.min.Y + pixels);
+    this->min.Y += pixels;
     this->max.Y = FMAX(this->min.Y, this->max.Y);
     return result;
 }
 
 Rect Rect::cut_left_unscaled(float pixels) {
     Rect result = *this;
-    result.min.X = FMIN(result.max.X, result.max.X - pixels);
-    this->max.X -= pixels;
-    this->min.X = FMIN(this->max.X, this->min.X);
+    result.max.X = FMAX(result.min.X, result.min.X + pixels);
+    this->min.X += pixels;
+    this->max.X = FMAX(this->min.X, this->max.X);
     return result;
 }
 

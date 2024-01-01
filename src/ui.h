@@ -19,6 +19,7 @@ struct Widget {
     uint64_t id;
     Widget_Flags flags;
     Rect rect;
+    Rect hit_rect;
     int64_t serial;
     int64_t render_layer;
     bool used_marker;
@@ -56,6 +57,7 @@ void ui_push_id(String id);
 void ui_push_id(int64_t index);
 void ui_push_id(void *ptr);
 void ui_pop_id();
+#define UI_PUSH_ID(id) ui_push_id(id); defer (ui_pop_id());
 
 int64_t ui_get_next_serial();
 
@@ -115,6 +117,10 @@ struct Grid_Layout {
 };
 
 Grid_Layout make_grid_layout(Rect rect, int64_t w, int64_t h, Grid_Layout_Kind kind);
+
+////////////////////////////////////////////////////////////////////////////////
+
+// todo(josh): text input
 
 ////////////////////////////////////////////////////////////////////////////////
 

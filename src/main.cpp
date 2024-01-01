@@ -9,6 +9,9 @@ Array<8, HMM_Vec4> ability_bar_items;
 bool sidebar_open;
 float sidebar_open_t;
 
+bool middle_thing_open;
+float middle_thing_open_t;
+
 void app_init() {
     ability_bar_items[0] = {0.5, 1, 0.5, 1};
     ability_bar_items[1] = {1, 0.5, 0.5, 1};
@@ -19,45 +22,96 @@ void app_update(float dt, float time_since_startup) {
     Button_Settings default_button_settings = {};
     HMM_Vec4 bg_rect_color = {0.25, 0.25, 0.25, 1};
 
+    if (ui_button(full_screen_rect().top_right_rect().grow(0, 0, 100, 100), "open middle thing", default_button_settings)->clicked) {
+        middle_thing_open = !middle_thing_open;
+    }
+
     // center scroll list
-    {
-        ui_push_id("center scroll list");
-        defer (ui_pop_id());
+    if (middle_thing_open) middle_thing_open_t = move_toward(middle_thing_open_t, 1, 4 * dt);
+    else                   middle_thing_open_t = move_toward(middle_thing_open_t, 0, 4 * dt);
 
-        Rect bg_rect = full_screen_rect().center_rect().grow(400, 600, 400, 600).offset(0, 50);
-        draw_quad(bg_rect, bg_rect_color);
+    if (middle_thing_open || middle_thing_open_t > 0) {
+        UI_PUSH_ID("center scroll list");
+        float open_t_eased = ease_ping_pong(middle_thing_open_t, middle_thing_open, ease_out_quart, ease_in_quart);
+        DRAW_PUSH_COLOR_MULTIPLIER(v4(open_t_eased, open_t_eased, open_t_eased, open_t_eased));
 
-        Rect content_rect = {};
-        push_scroll_view(bg_rect, "scroll view", SCROLL_VIEW_VERTICAL, &content_rect);
-        defer (pop_scroll_view());
+        Rect full_rect = full_screen_rect().center_rect().grow(400, 600, 400, 600).offset(0, 50);
+        full_rect = full_rect.offset(0, -75 * (1.0f-open_t_eased));
+        draw_quad(full_rect, bg_rect_color);
 
-        uint64_t rng = make_random(276372);
-        Rect cursor_rect = content_rect.top_rect();
-        for (int64_t i = 0; i < 20; i++) {
-            ui_push_id(i);
-            defer (ui_pop_id());
-            Rect entry_rect = cursor_rect.cut_top(75);
-            expand_current_scroll_view(entry_rect);
-            Rect button_rect = entry_rect.inset(5);
-            Button_Settings button_settings = default_button_settings;
-            button_settings.color_multiplier = {random_range_float(&rng, 0.6f, 1.0f), random_range_float(&rng, 0.6f, 1.0f), random_range_float(&rng, 0.6f, 1.0f), 1.0};
-            if (ui_button(button_rect, "", button_settings)->clicked) {
+        Grid_Layout grid = make_grid_layout(full_rect, 3, 1, Grid_Layout_Kind::ELEMENT_COUNT);
+        Rect cut = full_rect;
+        uint64_t rng = make_random(1235125);
+        FOR (column_index, 0, 3-1) {
+            UI_PUSH_ID(column_index);
+
+            Rect column_rect = cut;
+            if (column_index == 0) {
+                column_rect = cut.cut_left(300);
+            }
+            else if (column_index == 1) {
+                column_rect = cut.cut_left(600);
+            }
+
+            if (column_index == 1) {
+                UI_PUSH_ID("bottom horizontal scroll");
+                Rect horizontal_content_rect = {};
+                push_scroll_view(column_rect.cut_bottom(150), "horizontal 1", SCROLL_VIEW_HORIZONTAL, &horizontal_content_rect);
+                defer (pop_scroll_view());
+                FOR (element, 0, 20) {
+                    UI_PUSH_ID(element);
+                    Rect entry_rect = horizontal_content_rect.cut_left(75);
+                    expand_current_scroll_view(entry_rect);
+                    Button_Settings button_settings = default_button_settings;
+                    button_settings.color_multiplier = random_color(&rng);
+                    if (ui_button(entry_rect.inset(5), "", button_settings)->clicked) {
+                    }
+                }
+            }
+
+            Rect content_rect = {};
+            push_scroll_view(column_rect, "scroll view", SCROLL_VIEW_VERTICAL, &content_rect);
+            defer (pop_scroll_view());
+
+            if (column_index == 1) {
+                UI_PUSH_ID("top horizontal scroll");
+                Rect horizontal_content_rect = {};
+                push_scroll_view(content_rect.cut_top(150), "horizontal 1", SCROLL_VIEW_HORIZONTAL, &horizontal_content_rect);
+                defer (pop_scroll_view());
+                FOR (element, 0, 20) {
+                    UI_PUSH_ID(element);
+                    Rect entry_rect = horizontal_content_rect.cut_left(75);
+                    expand_current_scroll_view(entry_rect);
+                    Button_Settings button_settings = default_button_settings;
+                    button_settings.color_multiplier = random_color(&rng);
+                    if (ui_button(entry_rect.inset(5), "", button_settings)->clicked) {
+                    }
+                }
+            }
+
+            Rect cursor_rect = content_rect.top_rect();
+            FOR (j, 0, 20-1) {
+                UI_PUSH_ID(j);
+                Rect entry_rect = cursor_rect.cut_top(75);
+                expand_current_scroll_view(entry_rect);
+                Button_Settings button_settings = default_button_settings;
+                button_settings.color_multiplier = random_color(&rng);
+                if (ui_button(entry_rect.inset(5), "", button_settings)->clicked) {
+                }
             }
         }
     }
 
     // ability bar
     {
-        ui_push_id("ability bar");
-        defer (ui_pop_id());
+        UI_PUSH_ID("ability bar");
 
         Rect bar_rect = full_screen_rect().bottom_center_rect().grow(100, 400, 0, 400);
         draw_quad(bar_rect, bg_rect_color);
 
         Grid_Layout grid = make_grid_layout(bar_rect, 8, 1, Grid_Layout_Kind::ELEMENT_COUNT);
         FOR (i, 0, ability_bar_items.count()-1) {
-            ui_push_id(i);
-            defer (ui_pop_id());
+            UI_PUSH_ID(i);
 
             Rect entry_rect = grid.next().inset(5);
             int64_t entry_bg_serial = draw_get_next_serial();
@@ -101,8 +155,7 @@ void app_update(float dt, float time_since_startup) {
 
     // top left UI box
     {
-        ui_push_id("top left ui");
-        defer (ui_pop_id());
+        UI_PUSH_ID("top left ui");
 
         uint64_t rng = make_random(276372);
 
@@ -112,11 +165,10 @@ void app_update(float dt, float time_since_startup) {
         Rect cut = full_screen_rect().top_left_rect().grow_right(200).slide(-1 + open_t_eased, 0);
         Rect bg_rect = cut;
         FOR (i, 0, entry_count-1) {
-            ui_push_id(i);
-            defer (ui_pop_id());
+            UI_PUSH_ID(i);
 
             Button_Settings button_settings = default_button_settings;
-            button_settings.color_multiplier = {random_range_float(&rng, 0.6f, 1.0f), random_range_float(&rng, 0.6f, 1.0f), random_range_float(&rng, 0.6f, 1.0f), 1.0};
+            button_settings.color_multiplier = random_color(&rng);
             float height = random_range_float(&rng, 50, 150);
             Rect entry_rect = cut.cut_top(height).inset(5);
             if (ui_button(entry_rect, "", button_settings)->clicked) {

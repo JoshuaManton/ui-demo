@@ -120,6 +120,18 @@ static float smoothstep(float a, float b, float t) {
     return t * t * (3.0 - 2.0 * t);
 }
 
+static HMM_Vec4 random_color(uint64_t *rng) {
+    return {random_range_float(rng, 0.6f, 1.0f), random_range_float(rng, 0.6f, 1.0f), random_range_float(rng, 0.6f, 1.0f), 1.0};
+}
+
+static float sin_turns(float t) {
+    return sinf(2 * HMM_PI32 * t);
+}
+
+static float cos_turns(float t) {
+    return cosf(2 * HMM_PI32 * t);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum Allocator_Mode {
