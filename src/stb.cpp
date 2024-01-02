@@ -1,0 +1,4 @@
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_TRUETYPE_IMPLEMENTATION
+
+#include "stb.h"

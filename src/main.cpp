@@ -12,13 +12,24 @@ float sidebar_open_t;
 bool middle_thing_open;
 float middle_thing_open_t;
 
+Font *roboto_font;
+
 void app_init() {
     ability_bar_items[0] = {0.5, 1, 0.5, 1};
     ability_bar_items[1] = {1, 0.5, 0.5, 1};
     ability_bar_items[2] = {0.25, 1, 1, 1};
+
+    roboto_font = load_font_from_file("resources/fonts/roboto.ttf", 128);
+    assert(roboto_font != nullptr);
 }
 
 void app_update(float dt, float time_since_startup) {
+    {
+        HMM_Vec2 position = full_screen_rect().center_rect().min;
+        position.X -= calculate_text_width("Henlo", roboto_font) * 0.5f;
+        draw_text("Henlo!", position, roboto_font, {1, 1, 1, 1});
+    }
+
     Button_Settings default_button_settings = {};
     HMM_Vec4 bg_rect_color = {0.25, 0.25, 0.25, 1};
 
@@ -200,8 +211,6 @@ void app_update(float dt, float time_since_startup) {
     // }
 }
 
-sg_pipeline pipeline;
-
 uint64_t last_frame_start_time;
 
 void frame() {
@@ -211,10 +220,10 @@ void frame() {
     double dt = stm_sec(stm_laptime(&last_frame_start_time));
     double time_since_startup = stm_sec(stm_now());
 
-    ui_new_frame(dt);
+    ui_new_frame((float)dt);
     draw_update();
 
-    app_update(dt, time_since_startup);
+    app_update((float)dt, (float)time_since_startup);
 
     ui_end_frame();
     mouse_buttons_down = {};
@@ -228,7 +237,7 @@ void frame() {
         pass_action.colors[0].load_action = SG_LOADACTION_CLEAR;
         pass_action.colors[0].clear_value = {0.1f, 0.1f, 0.1f, 1.0f};
         sg_begin_default_pass(&pass_action, sapp_width(), sapp_height());
-        sg_apply_pipeline(pipeline);
+        sg_apply_pipeline(textured_pipeline);
         HMM_Mat4 screen_proj = HMM_Orthographic_LH_ZO(0, sapp_widthf(), 0, sapp_heightf(), -1000, 1000);
         sg_apply_uniforms(SG_SHADERSTAGE_VS, 0, SG_RANGE(screen_proj));
 
@@ -330,53 +339,15 @@ void init() {
     ui_init();
     draw_init();
 
-    sg_shader_desc shader_desc = {};
-    shader_desc.label = "simple shader";
-    shader_desc.attrs[0].sem_name = "POS";
-    shader_desc.attrs[1].sem_name = "COLOR";
-    shader_desc.vs.uniform_blocks[0].size = sizeof(HMM_Mat4);
-    shader_desc.vs.uniform_blocks[0].uniforms[0] = {"mvp", SG_UNIFORMTYPE_MAT4, 1};
-    shader_desc.vs.source = R"DONE(#version 300 es
-        layout(location=0) in vec4 in_pos;
-        layout(location=1) in vec4 in_color;
-        out vec4 fs_color;
-        uniform mat4 mvp;
-        void main() {
-            gl_Position = mvp * in_pos;
-            fs_color = in_color;
-        }
-        )DONE";
-    shader_desc.fs.source = R"DONE(#version 300 es
-        precision mediump float;
-        in vec4 fs_color;
-        out vec4 FragColor;
-        void main() {
-            FragColor = fs_color;
-        }
-        )DONE";
-
-    sg_shader shd = sg_make_shader(&shader_desc);
-    assert(shd.id != SG_INVALID_ID);
-
-    sg_pipeline_desc pipeline_desc = {};
-    pipeline_desc.label = "simple pipeline";
-    pipeline_desc.shader = shd;
-    pipeline_desc.layout.attrs[0].format = SG_VERTEXFORMAT_FLOAT4;
-    pipeline_desc.layout.attrs[1].format = SG_VERTEXFORMAT_FLOAT4;
-    pipeline_desc.blend_color = {1, 1, 1, 1},
-    pipeline_desc.colors[0].blend.enabled = true;
-    pipeline_desc.colors[0].blend.src_factor_rgb   = SG_BLENDFACTOR_SRC_ALPHA;
-    pipeline_desc.colors[0].blend.dst_factor_rgb   = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
-    pipeline_desc.colors[0].blend.src_factor_alpha = SG_BLENDFACTOR_SRC_ALPHA;
-    pipeline_desc.colors[0].blend.dst_factor_alpha = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
-    pipeline = sg_make_pipeline(&pipeline_desc);
-
     last_frame_start_time = stm_now();
 
     app_init();
 }
 
 int main(int argc, char* argv[]) {
+    UNUSED(argc);
+    UNUSED(argv);
+
     temp_arena = bootstrap_arena(default_allocator(), 16 * 1024 * 1024);
 
     sapp_desc desc = {};

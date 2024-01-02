@@ -64,9 +64,9 @@ int64_t ui_get_next_serial();
 ////////////////////////////////////////////////////////////////////////////////
 
 struct Button_Settings {
-    HMM_Vec4 color       = {0.8, 0.8, 0.8, 1};
-    HMM_Vec4 hover_color = {0.65, 0.65, 0.65, 1.0};
-    HMM_Vec4 press_color = {0.5, 0.5, 0.5, 1.0};
+    HMM_Vec4 color       = {0.8f, 0.8f, 0.8f, 1.0f};
+    HMM_Vec4 hover_color = {0.65f, 0.65f, 0.65f, 1.0f};
+    HMM_Vec4 press_color = {0.5f, 0.5f, 0.5f, 1.0f};
     HMM_Vec4 click_color = {1, 1, 1, 1};
     HMM_Vec4 color_multiplier = {1, 1, 1, 1};
 };

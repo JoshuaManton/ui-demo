@@ -9,10 +9,14 @@
 #include "external/HandmadeMath.h"
 #include "sokol_impl.h"
 
+#pragma warning(disable : 4505) // unreferenced function with internal linkage has been removed
+#pragma warning(disable : 4996) // This function or variable may be unsafe. Consider using fopen_s instead.
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #define FOR(i, lo, hi) for (int64_t i = lo; i <= hi; i++)
 #define FORR(i, lo, hi) for (int64_t i = hi; i >= lo; i--)
+#define UNUSED(x) ((void)x)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -39,12 +43,12 @@ static int64_t IMIN(int64_t a, int64_t b) {
     return b;
 }
 
-static int64_t FMAX(float a, float b) {
+static float FMAX(float a, float b) {
     if (a > b) return a;
     return b;
 }
 
-static int64_t FMIN(float a, float b) {
+static float FMIN(float a, float b) {
     if (a < b) return a;
     return b;
 }
@@ -56,7 +60,7 @@ static HMM_Vec4 v4(float x, float y, float z, float w) { return {x, y, z, w}; }
 static uint32_t random_next(uint64_t *state) {
     uint64_t old = *state ^ 0xc90fdaa2adf85459ULL;
     *state = *state * 6364136223846793005ULL + 0xc90fdaa2adf85459ULL;
-    uint32_t xorshifted = ((old >> 18u) ^ old) >> 27u;
+    uint32_t xorshifted = (uint32_t)(((old >> 18u) ^ old) >> 27u);
     uint32_t rot = old >> 59u;
     return (xorshifted >> rot) | (xorshifted << ((- (int64_t) rot) & 31));
 }
@@ -112,12 +116,12 @@ static float ease_in_quart(float x) {
 }
 
 static float ease_out_quart(float x) {
-    return 1 - pow(1 - x, 4);
+    return (float)(1 - pow(1 - x, 4));
 }
 
 static float smoothstep(float a, float b, float t) {
     t = clamp(0.0, 1.0, (t - a) / (b - a));
-    return t * t * (3.0 - 2.0 * t);
+    return (float)(t * t * (3.0 - 2.0 * t));
 }
 
 static HMM_Vec4 random_color(uint64_t *rng) {
@@ -159,6 +163,8 @@ static void free(Allocator allocator, void *ptr) {
 ////////////////////////////////////////////////////////////////////////////////
 
 static void *default_allocator_proc(void *data, void *old_ptr, int64_t size, int64_t align, Allocator_Mode mode) {
+    UNUSED(data);
+    UNUSED(align);
     if (mode == ALLOCATOR_MODE_ALLOC) {
         void *result = malloc(size);
         return result;

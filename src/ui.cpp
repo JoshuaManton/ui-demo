@@ -40,9 +40,9 @@ static int compare_widgets(const void *_a, const void *_b) {
     const Widget *a = (const Widget *)_a;
     const Widget *b = (const Widget *)_b;
     if (a->render_layer == b->render_layer) {
-        return a->serial - b->serial;
+        return (int)(a->serial - b->serial);
     }
-    return a->render_layer - b->render_layer;
+    return (int)(a->render_layer - b->render_layer);
 }
 
 void ui_init() {
@@ -227,8 +227,8 @@ Grid_Layout make_grid_layout(Rect rect, int64_t w, int64_t h, Grid_Layout_Kind k
     grid.cur_x = -1;
     grid.cur_y = -1;
     if (kind == Grid_Layout_Kind::ELEMENT_SIZE) {
-        grid.element_width       = w;
-        grid.element_height      = h;
+        grid.element_width       = (float)w;
+        grid.element_height      = (float)h;
         grid.elements_per_row    = IMAX(1, (int64_t)(rect.width()  / w));
         grid.elements_per_column = IMAX(1, (int64_t)(rect.height() / h));
     }
@@ -294,7 +294,7 @@ void pop_scroll_view() {
         HMM_Vec2 mouse_delta = mouse_screen_delta;
         if (!(current_scroll_view->scroll_view_flags & SCROLL_VIEW_HORIZONTAL)) mouse_delta.X = 0;
         if (!(current_scroll_view->scroll_view_flags & SCROLL_VIEW_VERTICAL))   mouse_delta.Y = 0;
-        new_target_offset += mouse_delta;
+        new_target_offset += mouse_delta / ui_scale_factor;
     }
     if (ui_hot_draggable_widget == current_scroll_view->id) {
         HMM_Vec2 scroll = get_mouse_scroll(true);
@@ -312,17 +312,17 @@ void pop_scroll_view() {
     float left_delta   = target_content_rect.min.X - current_scroll_view->rect.min.X;
 
     if (top_delta < 0) {
-        new_target_offset.Y -= top_delta;
+        new_target_offset.Y -= top_delta / ui_scale_factor;
     }
     else if (bottom_delta > 0) {
-        new_target_offset.Y -= bottom_delta;
+        new_target_offset.Y -= bottom_delta / ui_scale_factor;
     }
 
     if (right_delta < 0) {
-        new_target_offset.X -= right_delta;
+        new_target_offset.X -= right_delta / ui_scale_factor;
     }
     else if (left_delta > 0) {
-        new_target_offset.X -= left_delta;
+        new_target_offset.X -= left_delta / ui_scale_factor;
     }
 
     current_scroll_view->scroll_view_target_offset = new_target_offset;

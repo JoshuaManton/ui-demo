@@ -16,6 +16,7 @@ Arena *bootstrap_arena(Allocator backing_allocator, int64_t capacity) {
 }
 
 static void *arena_allocator_proc(void *data, void *old_ptr, int64_t size, int64_t align, Allocator_Mode mode) {
+    UNUSED(old_ptr);
     if (mode == ALLOCATOR_MODE_ALLOC) {
         if (size == 0) {
             return nullptr;
