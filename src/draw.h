@@ -21,6 +21,9 @@ struct Font {
     sg_image image;
     int64_t size;
     int64_t bitmap_dim;
+    int64_t ascender;
+    int64_t descender;
+    int64_t line_height;
     stbtt_bakedchar chars[96];
 };
 
@@ -63,6 +66,7 @@ void draw_init();
 void draw_update();
 
 int64_t draw_get_next_serial();
+void draw_set_next_serial(int64_t s);
 
 void draw_push_layer(int64_t layer);
 void draw_push_layer_relative(int64_t delta);

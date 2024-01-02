@@ -21,6 +21,8 @@ Rect              current_scissor_rect;
 
 static List<Font> all_fonts;
 
+static List<int64_t> queued_serials;
+
 static sg_image white_image;
 
 static sg_sampler linear_clamp_sampler;
@@ -51,6 +53,7 @@ void draw_init() {
     pushed_scissors.allocator = default_allocator();
     pushed_colors.allocator = default_allocator();
     all_fonts.allocator = default_allocator();
+    queued_serials.allocator = default_allocator();
 
     // make white image
     uint8_t white_image_data[] = {255, 255, 255, 255};
@@ -164,7 +167,7 @@ void draw_init() {
             out vec4 FragColor;
             void main() {
                 float v = texture(tex, fs_uv).r;
-                FragColor = vec4(1, 1, 1, v);
+                FragColor = vec4(1, 1, 1, v) * fs_color;
             }
             )DONE";
 
@@ -193,8 +196,15 @@ void draw_update() {
 }
 
 int64_t draw_get_next_serial() {
+    if (queued_serials.count > 0) {
+        return queued_serials.pop();
+    }
     last_serial += 1;
     return last_serial;
+}
+
+void draw_set_next_serial(int64_t s) {
+    queued_serials.add(s);
 }
 
 void draw_push_layer(int64_t layer) {
@@ -310,6 +320,14 @@ Font *load_font_from_file(const char *filepath, int64_t size) {
     } while (stbtt_result <= 0);
     defer (free(default_allocator(), font_bitmap));
 
+    stbtt_fontinfo font_info = {};
+    stbtt_InitFont(&font_info, ttf_data, 0);
+
+    int ascent, descent, line_height;
+    stbtt_GetFontVMetrics(&font_info, &ascent, &descent, &line_height);
+    float scale = stbtt_ScaleForPixelHeight(&font_info, (float)size);
+    line_height = ascent - descent + line_height;
+
     sg_image_desc desc = {};
     desc.type = SG_IMAGETYPE_2D;
     desc.width = dim;
@@ -319,6 +337,9 @@ Font *load_font_from_file(const char *filepath, int64_t size) {
     result->image = sg_make_image(&desc);
     result->size = size;
     result->bitmap_dim = dim;
+    result->ascender = (int64_t)((float)ascent * scale);
+    result->descender = (int64_t)((float)descent * scale);
+    result->line_height = (int64_t)((float)line_height * scale);
     return result;
 }
 
@@ -398,6 +419,27 @@ void draw_flush() {
 
         region.vertex_count = vertices.count - region.first_vertex;
         batch_regions.add(region);
+    }
+
+    assert(batch_regions.count > 0);
+    Batch_Region *current_batch_region = &batch_regions[0];
+    FOR (i, 1, batch_regions.count-1) {
+        Batch_Region *region = &batch_regions[i];
+        bool can_batch = true;
+        if (region->cmd->kind != current_batch_region->cmd->kind) can_batch = false;
+        else if (region->cmd->image.id != current_batch_region->cmd->image.id) can_batch = false;
+        else if (region->cmd->pipeline.id != current_batch_region->cmd->pipeline.id) can_batch = false;
+        else if (region->cmd->kind == Draw_Command_Kind::SCISSOR) can_batch = false;
+        else if (region->cmd->kind == Draw_Command_Kind::TEXT && region->cmd->text.font != current_batch_region->cmd->text.font) can_batch = false;
+
+        if (can_batch) {
+            assert(region->cmd->kind != Draw_Command_Kind::QUAD || region->cmd->kind != Draw_Command_Kind::TEXT);
+            current_batch_region->vertex_count += region->vertex_count;
+            region->skip = true;
+        }
+        else {
+            current_batch_region = region;
+        }
     }
 
     maybe_resize_vertex_buffer(vertices.count);

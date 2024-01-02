@@ -337,3 +337,32 @@ void expand_current_scroll_view(Rect rect) {
     }
     current_scroll_view->scroll_view_content_rect = current_scroll_view->scroll_view_content_rect.encapsulate(rect);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+Rect ui_text(Rect rect, String string, Text_Settings settings) {
+    // todo(josh): wordwrapping, newlines
+
+    HMM_Vec2 position = rect.min;
+    float string_width = calculate_text_width(string, settings.font);
+    switch (settings.halign) {
+        case Text_HAlign::LEFT:   position.X = rect.min.X; break;
+        case Text_HAlign::CENTER: position.X = HMM_Lerp(rect.min.X, 0.5f, rect.max.X) - string_width * 0.5f; break;
+        case Text_HAlign::RIGHT:  position.X = rect.max.X - string_width; break;
+        default: assert(false);
+    }
+    switch (settings.valign) {
+        case Text_VAlign::TOP:      position.Y = rect.max.Y - settings.font->line_height; break;
+        case Text_VAlign::CENTER:   position.Y = HMM_Lerp(rect.min.Y, 0.5f, rect.max.Y) - settings.font->line_height * 0.5f; break;
+        case Text_VAlign::BOTTOM:   position.Y = rect.min.Y - settings.font->descender; break;
+        case Text_VAlign::BASELINE: position.Y = rect.min.Y; break;
+        default: assert(false);
+    }
+    draw_text(string, position, settings.font, settings.color);
+    Rect result = {};
+    result.min = position;
+    result.min.Y += settings.font->descender;
+    result.max = result.min + v2(string_width, (float)settings.font->line_height);
+    expand_current_scroll_view(result);
+    return result;
+}

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core.h"
+#include "draw.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -120,7 +121,27 @@ Grid_Layout make_grid_layout(Rect rect, int64_t w, int64_t h, Grid_Layout_Kind k
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// todo(josh): text input
+enum class Text_VAlign {
+    TOP,
+    CENTER,
+    BOTTOM,
+    BASELINE,
+};
+
+enum class Text_HAlign {
+    LEFT,
+    CENTER,
+    RIGHT,
+};
+
+struct Text_Settings {
+    Font *font;
+    Text_VAlign valign;
+    Text_HAlign halign;
+    HMM_Vec4 color;
+};
+
+Rect ui_text(Rect rect, String string, Text_Settings settings);
 
 ////////////////////////////////////////////////////////////////////////////////
 

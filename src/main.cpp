@@ -25,9 +25,17 @@ void app_init() {
 
 void app_update(float dt, float time_since_startup) {
     {
-        HMM_Vec2 position = full_screen_rect().center_rect().min;
-        position.X -= calculate_text_width("Henlo", roboto_font) * 0.5f;
-        draw_text("Henlo!", position, roboto_font, {1, 1, 1, 1});
+        int64_t bg_serial = draw_get_next_serial();
+        Text_Settings settings = {};
+        settings.font = roboto_font;
+        settings.halign = Text_HAlign::CENTER;
+        settings.valign = Text_VAlign::BOTTOM;
+        settings.color = {.1f, .1f, .1f, 1};
+        String str = "Henglo!";
+        str.count = ((int64_t)(time_since_startup * 2) % str.count) + 1;
+        Rect text_rect = ui_text(full_screen_rect().center_rect(), str, settings);
+        draw_set_next_serial(bg_serial);
+        draw_quad(text_rect, {0.8f, 0.8f, 0.8f, 1});
     }
 
     Button_Settings default_button_settings = {};
