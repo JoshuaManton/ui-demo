@@ -71,6 +71,8 @@ void draw_set_next_serial(int64_t s);
 void draw_push_layer(int64_t layer);
 void draw_push_layer_relative(int64_t delta);
 void draw_pop_layer();
+#define DRAW_PUSH_LAYER(layer) draw_push_layer(layer); defer (draw_pop_layer());
+#define DRAW_PUSH_LAYER_RELATIVE(delta) draw_push_layer_relative(delta); defer (draw_pop_layer());
 
 void draw_push_color_multiplier(HMM_Vec4 color);
 void draw_pop_color_multiplier();

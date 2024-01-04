@@ -9,6 +9,7 @@ typedef uint64_t Widget_Flags; enum {
     WIDGET_FLAG_NOT_CLICKABLE = 1 << 0,
     WIDGET_FLAG_DRAGGABLE     = 1 << 1,
     WIDGET_FLAG_DROPPABLE     = 1 << 2,
+    WIDGET_FLAG_BLOCKER       = 1 << 3,
 };
 
 typedef uint64_t Scroll_View_Flags; enum {
@@ -64,6 +65,10 @@ int64_t ui_get_next_serial();
 
 ////////////////////////////////////////////////////////////////////////////////
 
+Widget *ui_blocker(Rect rect, String id);
+
+////////////////////////////////////////////////////////////////////////////////
+
 struct Button_Settings {
     HMM_Vec4 color       = {0.8f, 0.8f, 0.8f, 1.0f};
     HMM_Vec4 hover_color = {0.65f, 0.65f, 0.65f, 1.0f};
@@ -115,9 +120,17 @@ struct Grid_Layout {
         expand_current_scroll_view(result);
         return result;
     }
+
+    Rect get_rect_for_index(int64_t index) {
+        int64_t x = index % elements_per_row;
+        int64_t y = index / elements_per_row;
+        Rect result = root_entry_rect.offset_unscaled(x * element_width, -y * element_height);
+        expand_current_scroll_view(result);
+        return result;
+    }
 };
 
-Grid_Layout make_grid_layout(Rect rect, int64_t w, int64_t h, Grid_Layout_Kind kind);
+Grid_Layout make_grid_layout(Rect rect, float w, float h, Grid_Layout_Kind kind);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -86,6 +86,10 @@ void ui_new_frame(float dt) {
             if (widget->flags & WIDGET_FLAG_DRAGGABLE) {
                 ui_hot_draggable_widget = widget->id;
             }
+            if (widget->flags & WIDGET_FLAG_BLOCKER) {
+                ui_hot_widget = 0;
+                ui_hot_draggable_widget = 0;
+            }
         }
     }
 
@@ -208,6 +212,15 @@ Widget *update_widget(Rect rect, String id, Widget_Flags flags = 0) {
     return widget;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+Widget *ui_blocker(Rect rect, String id) {
+    Widget *blocker = update_widget(rect, id, WIDGET_FLAG_BLOCKER);
+    return blocker;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 Widget *ui_button(Rect rect, String id, Button_Settings settings) {
     expand_current_scroll_view(rect);
     Widget *button = update_widget(rect, id);
@@ -222,22 +235,22 @@ Widget *ui_button(Rect rect, String id, Button_Settings settings) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Grid_Layout make_grid_layout(Rect rect, int64_t w, int64_t h, Grid_Layout_Kind kind) {
+Grid_Layout make_grid_layout(Rect rect, float w, float h, Grid_Layout_Kind kind) {
     Grid_Layout grid = {};
     grid.cur_x = -1;
     grid.cur_y = -1;
     if (kind == Grid_Layout_Kind::ELEMENT_SIZE) {
-        grid.element_width       = (float)w;
-        grid.element_height      = (float)h;
+        grid.element_width       = w;
+        grid.element_height      = h;
         grid.elements_per_row    = IMAX(1, (int64_t)(rect.width()  / w));
         grid.elements_per_column = IMAX(1, (int64_t)(rect.height() / h));
     }
     else {
         assert(kind == Grid_Layout_Kind::ELEMENT_COUNT);
-        grid.element_width       = rect.width()  / (float)w;
-        grid.element_height      = rect.height() / (float)h;
-        grid.elements_per_row    = w;
-        grid.elements_per_column = h;
+        grid.element_width       = rect.width()  / w;
+        grid.element_height      = rect.height() / h;
+        grid.elements_per_row    = (int64_t)w;
+        grid.elements_per_column = (int64_t)h;
     }
     grid.root_entry_rect = rect.top_left_rect().grow_unscaled(0, grid.element_width, grid.element_height, 0);
     return grid;
@@ -342,7 +355,6 @@ void expand_current_scroll_view(Rect rect) {
 
 Rect ui_text(Rect rect, String string, Text_Settings settings) {
     // todo(josh): wordwrapping, newlines
-
     HMM_Vec2 position = rect.min;
     float string_width = calculate_text_width(string, settings.font);
     switch (settings.halign) {

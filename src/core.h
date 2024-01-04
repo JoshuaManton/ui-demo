@@ -447,6 +447,7 @@ struct Rect {
 
     Rect encapsulate(Rect other);
     Rect slide(float x, float y);
+    Rect lerp_to(Rect other, float t);
 
     Rect center_rect();
     Rect top_center_rect();

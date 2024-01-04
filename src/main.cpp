@@ -23,6 +23,79 @@ void app_init() {
     assert(roboto_font != nullptr);
 }
 
+int64_t selected_element = -1;
+float selected_element_t;
+bool something_is_focused;
+
+void draw_selectable_element(Rect entry_rect, int64_t index) {
+    UI_PUSH_ID(index);
+
+    Button_Settings button_settings = {};
+    uint64_t rng = make_random(index);
+    button_settings.color_multiplier = random_color(&rng);
+
+    // if clicked, this is the new focused element
+    if (ui_button(entry_rect, "", button_settings)->clicked) {
+        if (!something_is_focused) {
+            something_is_focused = true;
+            selected_element = index;
+            selected_element_t = 0;
+        }
+    }
+}
+
+void draw_grid_with_selectable_elements(Rect scroll_view_rect, Rect content_rect, float dt) {
+    // draw all unfocused elements
+    Grid_Layout grid = make_grid_layout(content_rect, 4, 2.5f, Grid_Layout_Kind::ELEMENT_COUNT);
+    int64_t focused_element = -1;
+    FOR (element, 0, 40) {
+        Rect entry_rect = grid.next();
+        expand_current_scroll_view(entry_rect);
+        if (selected_element == element) {
+            // skip the focused element. we'll draw it after
+            focused_element = element;
+            continue;
+        }
+        draw_selectable_element(entry_rect.inset(5), element);
+    }
+
+    // lerp animation value
+    if (something_is_focused && focused_element != -1) {
+        selected_element_t += dt * 4;
+        if (selected_element_t > 1) selected_element_t = 1;
+        ui_blocker(scroll_view_rect, "grid blocker");
+    }
+    else {
+        selected_element_t -= dt * 4;
+        if (selected_element_t < 0) selected_element_t = 0;
+    }
+
+    // draw focused element, if any
+    float eased_selected_thing_t = ease_ping_pong(selected_element_t, something_is_focused, ease_out_quart, ease_in_quart);
+    if (focused_element != -1) {
+        // darken background
+        draw_quad(scroll_view_rect, {0, 0, 0, 0.8f * eased_selected_thing_t});
+
+        // lerp entry rect according to anim time
+        Rect entry_rect = grid.get_rect_for_index(focused_element);
+        expand_current_scroll_view(entry_rect);
+        entry_rect = entry_rect.inset(5).lerp_to(scroll_view_rect.inset(25), eased_selected_thing_t);
+        draw_selectable_element(entry_rect, focused_element);
+
+        if (something_is_focused) {
+            // block the element button, doesn't make sense to click when it's focused
+            ui_blocker(entry_rect, "entry blocker");
+
+            // draw the close button
+            Button_Settings close_button_settings = {};
+            close_button_settings.color_multiplier = {1, .5, .5, 1};
+            if (ui_button(entry_rect.top_right_rect().grow(0, 0, 35, 35).offset(-4, -4), "close", close_button_settings)->clicked) {
+                something_is_focused = false;
+            }
+        }
+    }
+}
+
 void app_update(float dt, float time_since_startup) {
     {
         int64_t bg_serial = draw_get_next_serial();
@@ -73,19 +146,13 @@ void app_update(float dt, float time_since_startup) {
             }
 
             if (column_index == 1) {
-                UI_PUSH_ID("bottom horizontal scroll");
-                Rect horizontal_content_rect = {};
-                push_scroll_view(column_rect.cut_bottom(150), "horizontal 1", SCROLL_VIEW_HORIZONTAL, &horizontal_content_rect);
+                UI_PUSH_ID("bottom grid scroll");
+                Rect content_rect = {};
+                Rect scroll_view_rect = column_rect.cut_bottom(400);
+                push_scroll_view(scroll_view_rect, "grid", SCROLL_VIEW_VERTICAL, &content_rect);
                 defer (pop_scroll_view());
-                FOR (element, 0, 20) {
-                    UI_PUSH_ID(element);
-                    Rect entry_rect = horizontal_content_rect.cut_left(75);
-                    expand_current_scroll_view(entry_rect);
-                    Button_Settings button_settings = default_button_settings;
-                    button_settings.color_multiplier = random_color(&rng);
-                    if (ui_button(entry_rect.inset(5), "", button_settings)->clicked) {
-                    }
-                }
+
+                draw_grid_with_selectable_elements(scroll_view_rect, content_rect, dt);
             }
 
             Rect content_rect = {};

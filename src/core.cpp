@@ -74,7 +74,7 @@ uint8_t &String::operator [](int64_t index) {
     return data[index];
 }
 
-String tprint(char* format, ...) {
+String tprint(char *format, ...) {
     va_list args;
 
     va_start(args, format);
@@ -489,6 +489,13 @@ Rect Rect::slide(float x, float y) {
     HMM_Vec2 diff = size() * v2(x, y);
     result.min += diff;
     result.max += diff;
+    return result;
+}
+
+Rect Rect::lerp_to(Rect other, float t) {
+    Rect result = *this;
+    result.min = HMM_LerpV2(result.min, t, other.min);
+    result.max = HMM_LerpV2(result.max, t, other.max);
     return result;
 }
 
