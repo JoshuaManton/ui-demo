@@ -4,24 +4,172 @@
 
 #define UI_DRAG_DROP_ITEM_LAYER (10000)
 
-Array<8, HMM_Vec4> ability_bar_items;
+Font *roboto_font_small;
+Font *roboto_font_medium;
+Font *roboto_font_large;
+float dt;
+float time_since_startup;
 
-bool sidebar_open;
-float sidebar_open_t;
 
-bool middle_thing_open;
-float middle_thing_open_t;
 
-Font *roboto_font;
+////////////////////////////////////////////////////////////////////////////////
+//
+// Rects and drawing quads
+//
 
-void app_init() {
-    ability_bar_items[0] = {0.5, 1, 0.5, 1};
-    ability_bar_items[1] = {1, 0.5, 0.5, 1};
-    ability_bar_items[2] = {0.25, 1, 1, 1};
+void example_rects(Rect rect) {
 
-    roboto_font = load_font_from_file("resources/fonts/roboto.ttf", 128);
-    assert(roboto_font != nullptr);
 }
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Text
+//
+
+void example_text(Rect rect) {
+    Text_Settings settings = {};
+    settings.font = roboto_font_large;
+    settings.halign = Text_HAlign::CENTER;
+    settings.valign = Text_VAlign::CENTER;
+    settings.color = {0.8f, 0.8f, 0.8f, 1};
+    String str = "Henglo!";
+    str.count = ((int64_t)(time_since_startup * 2) % str.count) + 1;
+    ui_text(rect, str, settings);
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Buttons
+//
+
+void example_buttons(Rect rect) {
+    HMM_Vec2 center = {sapp_widthf()/2, sapp_heightf()/2};
+    Rect button_rect = {};
+    button_rect.min = center - v2(100, 50);
+    button_rect.max = center + v2(100, 50);
+    if (ui_button(button_rect, "button1", {})->clicked) {
+        printf("Clicked 1!\n");
+    }
+
+    Rect button_rect2 = button_rect.offset(0, -110);
+    if (ui_button(button_rect2, "button2", {})->clicked) {
+        printf("Clicked 2!\n");
+    }
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// More buttons
+//
+
+void example_more_buttons(Rect rect) {
+    Rect cut = rect.subrect(0.5f, 0.7f, 0.5f, 0.7f, 0, -100, 0, -100);
+    for (int64_t i = 0; i < 5; i++) {
+        UI_PUSH_ID(i);
+        Rect button_rect = cut.cut_top(100).inset(5);
+        if (ui_button(button_rect, "", {})->clicked) {
+            printf("Clicked %lld!\n", i);
+        }
+    }
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Serial numbers
+//
+
+void example_serial_numbers(Rect rect) {
+    int64_t bg_serial = draw_get_next_serial();
+    Text_Settings settings = {};
+    settings.font = roboto_font_large;
+    settings.halign = Text_HAlign::CENTER;
+    settings.valign = Text_VAlign::CENTER;
+    settings.color = {0.8f, 0.8f, 0.8f, 1};
+    String str = "Henglo!";
+    str.count = ((int64_t)(time_since_startup * 2) % str.count) + 1;
+    Rect text_rect = ui_text(rect, str, settings);
+    draw_set_next_serial(bg_serial);
+    draw_quad(text_rect, {0, 0.35f, 0, 1});
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Layers
+//
+
+void example_layers(Rect rect) {
+    ui_text(rect, "todo", {
+        .font   = roboto_font_large,
+        .valign = Text_VAlign::CENTER,
+        .halign = Text_HAlign::CENTER,
+        .color  = v4(0.8f, 0.8f, 0.8f, 1),
+    });
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Scroll views
+//
+
+void example_scroll_views(Rect rect) {
+    ui_text(rect, "todo", {
+        .font   = roboto_font_large,
+        .valign = Text_VAlign::CENTER,
+        .halign = Text_HAlign::CENTER,
+        .color  = v4(0.8f, 0.8f, 0.8f, 1),
+    });
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Grids
+//
+
+void example_grids(Rect rect) {
+    ui_text(rect, "todo", {
+        .font   = roboto_font_large,
+        .valign = Text_VAlign::CENTER,
+        .halign = Text_HAlign::CENTER,
+        .color  = v4(0.8f, 0.8f, 0.8f, 1),
+    });
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Drag and drop
+//
+
+void example_drag_and_drop(Rect rect) {
+    ui_text(rect, "todo", {
+        .font   = roboto_font_large,
+        .valign = Text_VAlign::CENTER,
+        .halign = Text_HAlign::CENTER,
+        .color  = v4(0.8f, 0.8f, 0.8f, 1),
+    });
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Grid with selectable elements
+//
 
 int64_t selected_element = -1;
 float selected_element_t;
@@ -44,11 +192,11 @@ void draw_selectable_element(Rect entry_rect, int64_t index) {
     }
 }
 
-void draw_grid_with_selectable_elements(Rect scroll_view_rect, Rect content_rect, float dt) {
+void draw_grid_with_selectable_elements(Rect scroll_view_rect, Rect content_rect) {
     // draw all unfocused elements
     Grid_Layout grid = make_grid_layout(content_rect, 4, 2.5f, Grid_Layout_Kind::ELEMENT_COUNT);
     int64_t focused_element = -1;
-    FOR (element, 0, 40) {
+    for (int64_t element = 0; element < 18; element++) {
         Rect entry_rect = grid.next();
         expand_current_scroll_view(entry_rect);
         if (selected_element == element) {
@@ -96,26 +244,89 @@ void draw_grid_with_selectable_elements(Rect scroll_view_rect, Rect content_rect
     }
 }
 
-void app_update(float dt, float time_since_startup) {
-    {
-        int64_t bg_serial = draw_get_next_serial();
-        Text_Settings settings = {};
-        settings.font = roboto_font;
-        settings.halign = Text_HAlign::CENTER;
-        settings.valign = Text_VAlign::BOTTOM;
-        settings.color = {.1f, .1f, .1f, 1};
-        String str = "Henglo!";
-        str.count = ((int64_t)(time_since_startup * 2) % str.count) + 1;
-        Rect text_rect = ui_text(full_screen_rect().center_rect(), str, settings);
-        draw_set_next_serial(bg_serial);
-        draw_quad(text_rect, {0.8f, 0.8f, 0.8f, 1});
-    }
+void example_grid_with_selectable_elements(Rect rect) {
+    Rect main_rect = rect.center_rect().grow(300, 450, 300, 450);
+    draw_quad(main_rect, {0.25, 0.25, 0.25, 1});
+    Rect content_rect = {};
+    push_scroll_view(main_rect, "grid", SCROLL_VIEW_VERTICAL, &content_rect);
+    defer (pop_scroll_view());
+    draw_grid_with_selectable_elements(main_rect, content_rect);
+}
 
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Auto-scaling
+//
+
+void example_autoscaling(Rect rect) {
+    ui_text(rect, "todo", {
+        .font   = roboto_font_large,
+        .valign = Text_VAlign::CENTER,
+        .halign = Text_HAlign::CENTER,
+        .color  = v4(0.8f, 0.8f, 0.8f, 1),
+    });
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Main loop
+//
+
+bool sidebar_open;
+float sidebar_open_t;
+
+bool middle_thing_open;
+float middle_thing_open_t;
+
+int64_t selected_example;
+
+bool do_example_button(Rect *cut, int64_t index, String button_text, Text_Settings ts) {
+    UI_PUSH_ID(index);
+    Rect rect = cut->cut_top(70).inset(5);
+    Button_Settings bs = {};
+    if (selected_example == index) {
+        bs.color_multiplier = {.5, 1, .5, 1};
+    }
+    if (ui_button(rect, "", bs, button_text, ts)->clicked) {
+        selected_example = index;
+    }
+    return selected_example == index;
+}
+
+void app_update() {
     Button_Settings default_button_settings = {};
     HMM_Vec4 bg_rect_color = {0.25, 0.25, 0.25, 1};
 
-    if (ui_button(full_screen_rect().top_right_rect().grow(0, 0, 100, 100), "open middle thing", default_button_settings)->clicked) {
-        middle_thing_open = !middle_thing_open;
+    // if (ui_button(full_screen_rect().top_right_rect().grow(0, 0, 100, 100), "open middle thing", default_button_settings)->clicked) {
+    //     middle_thing_open = !middle_thing_open;
+    // }
+
+    // examples listing
+    {
+        Text_Settings example_button_ts = {};
+        example_button_ts.font = roboto_font_medium;
+        example_button_ts.halign = Text_HAlign::CENTER;
+        example_button_ts.valign = Text_VAlign::CENTER;
+        example_button_ts.color = {0.1f, 0.1f, 0.1f, 1};
+        Rect full_screen = full_screen_rect();
+        Rect sidebar_rect = full_screen.cut_left(400);
+        draw_quad(sidebar_rect, {.05f, .05f, .05f, 1.0});
+        Rect cut = sidebar_rect.top_rect();
+        if (do_example_button(&cut, 0,  "Rects",            example_button_ts)) { UI_PUSH_ID("example"); example_rects(full_screen);                         }
+        if (do_example_button(&cut, 1,  "Text",             example_button_ts)) { UI_PUSH_ID("example"); example_text(full_screen);                          }
+        if (do_example_button(&cut, 2,  "Serial Numbers",   example_button_ts)) { UI_PUSH_ID("example"); example_serial_numbers(full_screen);                }
+        if (do_example_button(&cut, 3,  "Buttons",          example_button_ts)) { UI_PUSH_ID("example"); example_buttons(full_screen);                       }
+        if (do_example_button(&cut, 4,  "More Buttons",     example_button_ts)) { UI_PUSH_ID("example"); example_more_buttons(full_screen);                  }
+        if (do_example_button(&cut, 5,  "Layers",           example_button_ts)) { UI_PUSH_ID("example"); example_layers(full_screen);                        }
+        if (do_example_button(&cut, 6,  "Scroll Views",     example_button_ts)) { UI_PUSH_ID("example"); example_scroll_views(full_screen);                  }
+        if (do_example_button(&cut, 7,  "Grid Layout",      example_button_ts)) { UI_PUSH_ID("example"); example_grids(full_screen);                         }
+        if (do_example_button(&cut, 8,  "Drag and Drop",    example_button_ts)) { UI_PUSH_ID("example"); example_drag_and_drop(full_screen);                 }
+        if (do_example_button(&cut, 9,  "Grid + Modal",     example_button_ts)) { UI_PUSH_ID("example"); example_grid_with_selectable_elements(full_screen); }
+        if (do_example_button(&cut, 10, "Auto-Scaling",     example_button_ts)) { UI_PUSH_ID("example"); example_autoscaling(full_screen);                   }
     }
 
     // center scroll list
@@ -152,7 +363,7 @@ void app_update(float dt, float time_since_startup) {
                 push_scroll_view(scroll_view_rect, "grid", SCROLL_VIEW_VERTICAL, &content_rect);
                 defer (pop_scroll_view());
 
-                draw_grid_with_selectable_elements(scroll_view_rect, content_rect, dt);
+                draw_grid_with_selectable_elements(scroll_view_rect, content_rect);
             }
 
             Rect content_rect = {};
@@ -189,8 +400,17 @@ void app_update(float dt, float time_since_startup) {
     }
 
     // ability bar
-    {
+    if (0) {
         UI_PUSH_ID("ability bar");
+
+        static Array<8, HMM_Vec4> ability_bar_items;
+        static bool ability_bar_initted = false;
+        if (!ability_bar_initted) {
+            ability_bar_initted = true;
+            ability_bar_items[0] = {0.5, 1, 0.5, 1};
+            ability_bar_items[1] = {1, 0.5, 0.5, 1};
+            ability_bar_items[2] = {0.25, 1, 1, 1};
+        }
 
         Rect bar_rect = full_screen_rect().bottom_center_rect().grow(100, 400, 0, 400);
         draw_quad(bar_rect, bg_rect_color);
@@ -240,7 +460,7 @@ void app_update(float dt, float time_since_startup) {
     }
 
     // top left UI box
-    {
+    if (0) {
         UI_PUSH_ID("top left ui");
 
         uint64_t rng = make_random(276372);
@@ -292,13 +512,13 @@ void frame() {
     temp_arena->reset();
 
     // note(josh): we aren't bothering with a fixed timestep update loop for this example. in a real application you ideally wouldn't have a variable dt like we have here
-    double dt = stm_sec(stm_laptime(&last_frame_start_time));
-    double time_since_startup = stm_sec(stm_now());
+    dt                 = (float)stm_sec(stm_laptime(&last_frame_start_time));
+    time_since_startup = (float)stm_sec(stm_now());
 
     ui_new_frame((float)dt);
     draw_update();
 
-    app_update((float)dt, (float)time_since_startup);
+    app_update();
 
     ui_end_frame();
     mouse_buttons_down = {};
@@ -403,6 +623,15 @@ void event(const sapp_event *evt) {
 
 void cleanup() {
     sg_shutdown();
+}
+
+void app_init() {
+    roboto_font_small = load_font_from_file("resources/fonts/roboto.ttf", 24);
+    assert(roboto_font_small != nullptr);
+    roboto_font_medium = load_font_from_file("resources/fonts/roboto.ttf", 48);
+    assert(roboto_font_medium != nullptr);
+    roboto_font_large = load_font_from_file("resources/fonts/roboto.ttf", 96);
+    assert(roboto_font_large != nullptr);
 }
 
 void init() {

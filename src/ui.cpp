@@ -221,7 +221,7 @@ Widget *ui_blocker(Rect rect, String id) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Widget *ui_button(Rect rect, String id, Button_Settings settings) {
+Widget *ui_button(Rect rect, String id, Button_Settings settings, String text/* = {}*/, Text_Settings text_settings/* = {}*/) {
     expand_current_scroll_view(rect);
     Widget *button = update_widget(rect, id);
     HMM_Vec4 color = settings.color;
@@ -230,6 +230,10 @@ Widget *ui_button(Rect rect, String id, Button_Settings settings) {
     color = HMM_LerpV4(color, button->clicked_t, settings.click_color);
     color *= settings.color_multiplier;
     draw_quad(rect, color);
+    if (text.count > 0) {
+        text_settings.color *= color;
+        ui_text(rect, text, text_settings);
+    }
     return button;
 }
 
@@ -365,7 +369,7 @@ Rect ui_text(Rect rect, String string, Text_Settings settings) {
     }
     switch (settings.valign) {
         case Text_VAlign::TOP:      position.Y = rect.max.Y - settings.font->line_height; break;
-        case Text_VAlign::CENTER:   position.Y = HMM_Lerp(rect.min.Y, 0.5f, rect.max.Y) - settings.font->line_height * 0.5f; break;
+        case Text_VAlign::CENTER:   position.Y = HMM_Lerp(rect.min.Y, 0.5f, rect.max.Y) - settings.font->line_height * 0.5f - settings.font->descender; break;
         case Text_VAlign::BOTTOM:   position.Y = rect.min.Y - settings.font->descender; break;
         case Text_VAlign::BASELINE: position.Y = rect.min.Y; break;
         default: assert(false);

@@ -65,6 +65,30 @@ int64_t ui_get_next_serial();
 
 ////////////////////////////////////////////////////////////////////////////////
 
+enum class Text_VAlign {
+    TOP,
+    CENTER,
+    BOTTOM,
+    BASELINE,
+};
+
+enum class Text_HAlign {
+    LEFT,
+    CENTER,
+    RIGHT,
+};
+
+struct Text_Settings {
+    Font *font;
+    Text_VAlign valign;
+    Text_HAlign halign;
+    HMM_Vec4 color;
+};
+
+Rect ui_text(Rect rect, String string, Text_Settings settings);
+
+////////////////////////////////////////////////////////////////////////////////
+
 Widget *ui_blocker(Rect rect, String id);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,7 +101,7 @@ struct Button_Settings {
     HMM_Vec4 color_multiplier = {1, 1, 1, 1};
 };
 
-Widget *ui_button(Rect rect, String id, Button_Settings settings);
+Widget *ui_button(Rect rect, String id, Button_Settings settings, String text = {}, Text_Settings text_settings = {});
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -131,30 +155,6 @@ struct Grid_Layout {
 };
 
 Grid_Layout make_grid_layout(Rect rect, float w, float h, Grid_Layout_Kind kind);
-
-////////////////////////////////////////////////////////////////////////////////
-
-enum class Text_VAlign {
-    TOP,
-    CENTER,
-    BOTTOM,
-    BASELINE,
-};
-
-enum class Text_HAlign {
-    LEFT,
-    CENTER,
-    RIGHT,
-};
-
-struct Text_Settings {
-    Font *font;
-    Text_VAlign valign;
-    Text_HAlign halign;
-    HMM_Vec4 color;
-};
-
-Rect ui_text(Rect rect, String string, Text_Settings settings);
 
 ////////////////////////////////////////////////////////////////////////////////
 

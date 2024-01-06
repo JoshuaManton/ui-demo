@@ -1,1 +1,1 @@
-cl /Zi src/main.cpp src/ui.cpp src/draw.cpp src/core.cpp src/sokol_impl.cpp src/stb.cpp /W4
+cl /std:c++20 /Zi src/main.cpp src/ui.cpp src/draw.cpp src/core.cpp src/sokol_impl.cpp src/stb.cpp /W4
