@@ -10,6 +10,8 @@ Font *roboto_font_large;
 float dt;
 float time_since_startup;
 
+Text_Settings default_text_settings;
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -18,7 +20,16 @@ float time_since_startup;
 //
 
 void example_rects(Rect rect) {
+    draw_quad(rect, {.5f, 1, .5f, 1});
 
+    rect = rect.inset(50);
+    draw_quad(rect, {1, .5f, .5f, 1});
+
+    rect = rect.center_rect().grow(100, 200, 100, 200);
+    draw_quad(rect, {.5f, .5f, 1, 1});
+
+    rect = rect.offset(0, 300);
+    draw_quad(rect, {.5f, 1, 1, 1});
 }
 
 
@@ -29,14 +40,9 @@ void example_rects(Rect rect) {
 //
 
 void example_text(Rect rect) {
-    Text_Settings settings = {};
-    settings.font = roboto_font_large;
-    settings.halign = Text_HAlign::CENTER;
-    settings.valign = Text_VAlign::CENTER;
-    settings.color = {0.8f, 0.8f, 0.8f, 1};
     String str = "Henglo!";
     str.count = ((int64_t)(time_since_startup * 2) % str.count) + 1;
-    ui_text(rect, str, settings);
+    ui_text(rect, str, default_text_settings);
 }
 
 
@@ -47,10 +53,7 @@ void example_text(Rect rect) {
 //
 
 void example_buttons(Rect rect) {
-    HMM_Vec2 center = {sapp_widthf()/2, sapp_heightf()/2};
-    Rect button_rect = {};
-    button_rect.min = center - v2(100, 50);
-    button_rect.max = center + v2(100, 50);
+    Rect button_rect = rect.center_rect().grow(50, 100, 50, 100);
     if (ui_button(button_rect, "button1", {})->clicked) {
         printf("Clicked 1!\n");
     }
@@ -87,15 +90,10 @@ void example_more_buttons(Rect rect) {
 //
 
 void example_serial_numbers(Rect rect) {
-    int64_t bg_serial = draw_get_next_serial();
-    Text_Settings settings = {};
-    settings.font = roboto_font_large;
-    settings.halign = Text_HAlign::CENTER;
-    settings.valign = Text_VAlign::CENTER;
-    settings.color = {0.8f, 0.8f, 0.8f, 1};
     String str = "Henglo!";
     str.count = ((int64_t)(time_since_startup * 2) % str.count) + 1;
-    Rect text_rect = ui_text(rect, str, settings);
+    int64_t bg_serial = draw_get_next_serial();
+    Rect text_rect = ui_text(rect, str, default_text_settings);
     draw_set_next_serial(bg_serial);
     draw_quad(text_rect, {0, 0.35f, 0, 1});
 }
@@ -108,12 +106,7 @@ void example_serial_numbers(Rect rect) {
 //
 
 void example_layers(Rect rect) {
-    ui_text(rect, "todo", {
-        .font   = roboto_font_large,
-        .valign = Text_VAlign::CENTER,
-        .halign = Text_HAlign::CENTER,
-        .color  = v4(0.8f, 0.8f, 0.8f, 1),
-    });
+    ui_text(rect, "todo", default_text_settings);
 }
 
 
@@ -124,12 +117,7 @@ void example_layers(Rect rect) {
 //
 
 void example_scroll_views(Rect rect) {
-    ui_text(rect, "todo", {
-        .font   = roboto_font_large,
-        .valign = Text_VAlign::CENTER,
-        .halign = Text_HAlign::CENTER,
-        .color  = v4(0.8f, 0.8f, 0.8f, 1),
-    });
+    ui_text(rect, "todo", default_text_settings);
 }
 
 
@@ -140,12 +128,7 @@ void example_scroll_views(Rect rect) {
 //
 
 void example_grids(Rect rect) {
-    ui_text(rect, "todo", {
-        .font   = roboto_font_large,
-        .valign = Text_VAlign::CENTER,
-        .halign = Text_HAlign::CENTER,
-        .color  = v4(0.8f, 0.8f, 0.8f, 1),
-    });
+    ui_text(rect, "todo", default_text_settings);
 }
 
 
@@ -156,12 +139,7 @@ void example_grids(Rect rect) {
 //
 
 void example_drag_and_drop(Rect rect) {
-    ui_text(rect, "todo", {
-        .font   = roboto_font_large,
-        .valign = Text_VAlign::CENTER,
-        .halign = Text_HAlign::CENTER,
-        .color  = v4(0.8f, 0.8f, 0.8f, 1),
-    });
+    ui_text(rect, "todo", default_text_settings);
 }
 
 
@@ -261,12 +239,7 @@ void example_grid_with_selectable_elements(Rect rect) {
 //
 
 void example_autoscaling(Rect rect) {
-    ui_text(rect, "todo", {
-        .font   = roboto_font_large,
-        .valign = Text_VAlign::CENTER,
-        .halign = Text_HAlign::CENTER,
-        .color  = v4(0.8f, 0.8f, 0.8f, 1),
-    });
+    ui_text(rect, "todo", default_text_settings);
 }
 
 
@@ -632,6 +605,11 @@ void app_init() {
     assert(roboto_font_medium != nullptr);
     roboto_font_large = load_font_from_file("resources/fonts/roboto.ttf", 96);
     assert(roboto_font_large != nullptr);
+
+    default_text_settings.font   = roboto_font_large;
+    default_text_settings.valign = Text_VAlign::CENTER;
+    default_text_settings.halign = Text_HAlign::CENTER;
+    default_text_settings.color  = v4(0.8f, 0.8f, 0.8f, 1);
 }
 
 void init() {
